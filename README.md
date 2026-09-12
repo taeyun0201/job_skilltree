@@ -41,29 +41,6 @@ Career++는 현재 보유한 기술을 확인하고, 목표 직업에 필요한 
 
 별도의 백엔드 서버 없이 Next.js Route Handler에서 인증, 프로필, 스킬 해금 및 채용공고 API를 처리합니다.
 
-## 시작하기
-
-### 요구 사항
-
-- Node.js 20 이상
-- npm
-- MongoDB Atlas 데이터베이스
-
-### 설치 및 실행
-
-```bash
-npm install
-copy .env.example .env.local
-npm run dev
-```
-
-macOS 또는 Linux에서는 `copy` 대신 아래 명령을 사용합니다.
-
-```bash
-cp .env.example .env.local
-```
-
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 엽니다.
 
 ## 환경 변수
 

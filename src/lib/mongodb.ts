@@ -1,5 +1,5 @@
 import { setServers } from "node:dns";
-import { Db, MongoClient } from "mongodb";
+import type { Db, MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
 const databaseName = process.env.MONGODB_DB ?? "career-skill-tree";
@@ -16,18 +16,23 @@ if (process.platform === "win32") {
   setServers(["1.1.1.1", "8.8.8.8"]);
 }
 
+async function connectMongoClient(): Promise<MongoClient> {
+  const { MongoClient } = await import("mongodb");
+  return new MongoClient(uri!).connect();
+}
+
 export function getMongoClient(): Promise<MongoClient> {
   if (!uri) throw new Error("MONGODB_URI 환경 변수가 설정되지 않았습니다.");
 
   if (process.env.NODE_ENV === "development") {
-    global.mongoClientPromise ??= new MongoClient(uri).connect().catch((error) => {
+    global.mongoClientPromise ??= connectMongoClient().catch((error) => {
       global.mongoClientPromise = undefined;
       throw error;
     });
     return global.mongoClientPromise;
   }
 
-  clientPromise ??= new MongoClient(uri).connect().catch((error) => {
+  clientPromise ??= connectMongoClient().catch((error) => {
     clientPromise = null;
     throw error;
   });

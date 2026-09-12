@@ -1,11 +1,31 @@
+import { redirect } from "next/navigation";
+import { ObjectId } from "mongodb";
+import { auth } from "@/auth";
 import { SkillMap } from "@/components/skill-map/SkillMap";
+import { getDb } from "@/lib/mongodb";
+import type { UserDocument, UserSkill } from "@/types";
 
-export default function SkillMapPage() {
+export default async function SkillMapPage() {
+  const session = await auth();
+  if (!session?.user?.id) redirect("/login");
+
+  const db = await getDb();
+  const user = ObjectId.isValid(session.user.id)
+    ? await db.collection<UserDocument>("users").findOne(
+        { _id: new ObjectId(session.user.id) },
+        { projection: { targetJobId: 1 } },
+      )
+    : null;
+  const unlockedSkills = await db
+    .collection<UserSkill>("user_skills")
+    .find({ userId: session.user.id })
+    .project<{ skillId: string }>({ _id: 0, skillId: 1 })
+    .toArray();
+
   return (
-    <>
-      <h2>커리어 스킬맵</h2>
-      <p>노드를 눌러 학습 내용을 확인하고 스킬을 해금하세요.</p>
-      <SkillMap />
-    </>
+    <SkillMap
+      initialUnlockedSkillKeys={unlockedSkills.map((item) => item.skillId)}
+      targetJobId={user?.targetJobId}
+    />
   );
 }

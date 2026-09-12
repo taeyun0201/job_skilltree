@@ -1,4 +1,4 @@
-import { setServers } from "node:dns";
+import { Resolver } from "node:dns/promises";
 import type { Db, MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI;
@@ -10,15 +10,39 @@ declare global {
 
 let clientPromise: Promise<MongoClient> | null = null;
 
-// 일부 Windows 네트워크에서는 Node.js의 기본 DNS가 Atlas SRV 조회를
-// ECONNREFUSED로 거부합니다. 앱 프로세스에서만 공용 DNS를 사용합니다.
-if (process.platform === "win32") {
-  setServers(["1.1.1.1", "8.8.8.8"]);
+async function resolveWindowsAtlasUri(connectionUri: string) {
+  if (process.platform !== "win32" || !connectionUri.startsWith("mongodb+srv://")) {
+    return connectionUri;
+  }
+
+  const parsed = new URL(connectionUri);
+  const resolver = new Resolver();
+  resolver.setServers(["1.1.1.1", "8.8.8.8"]);
+
+  const [records, txtRecords] = await Promise.all([
+    resolver.resolveSrv(`_mongodb._tcp.${parsed.hostname}`),
+    resolver.resolveTxt(parsed.hostname),
+  ]);
+
+  const hosts = records.map(({ name, port }) => `${name}:${port}`).join(",");
+  const credentials = parsed.username
+    ? `${parsed.username}${parsed.password ? `:${parsed.password}` : ""}@`
+    : "";
+  const params = new URLSearchParams(parsed.searchParams);
+
+  for (const entry of txtRecords.flatMap((record) => record.join("").split("&"))) {
+    const [key, value] = entry.split("=");
+    if (key && value && !params.has(key)) params.set(key, value);
+  }
+  params.set("tls", "true");
+
+  return `mongodb://${credentials}${hosts}${parsed.pathname}?${params.toString()}`;
 }
 
 async function connectMongoClient(): Promise<MongoClient> {
+  const connectionUri = await resolveWindowsAtlasUri(uri!);
   const { MongoClient } = await import("mongodb");
-  return new MongoClient(uri!).connect();
+  return new MongoClient(connectionUri).connect();
 }
 
 export function getMongoClient(): Promise<MongoClient> {

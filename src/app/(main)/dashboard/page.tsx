@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { CharacterCard } from "@/components/dashboard/CharacterCard";
+import { DeleteAccountButton } from "@/components/dashboard/DeleteAccountButton";
 import { SkillSummary } from "@/components/dashboard/SkillSummary";
 import { JOBS, SKILLS } from "@/data/skill-map";
 import { getDb } from "@/lib/mongodb";
@@ -40,6 +41,27 @@ export default async function DashboardPage() {
   const targetSkills = SKILLS.filter((skill) => skill.jobIds.includes(user.targetJobId ?? ""));
   const targetSkillKeys = new Set(targetSkills.map((skill) => skill.skillKey));
   const targetCompleted = [...targetSkillKeys].filter((key) => unlockedSkillKeys.has(key)).length;
+  const otherCareerPaths = JOBS
+    .filter((job) => job.id !== user.targetJobId)
+    .map((job) => {
+      const skillKeys = new Set(
+        SKILLS.filter((skill) => skill.jobIds.includes(job.id)).map((skill) => skill.skillKey),
+      );
+      const completed = [...skillKeys].filter((key) => unlockedSkillKeys.has(key)).length;
+      return {
+        id: job.id,
+        name: job.name,
+        completed,
+        total: skillKeys.size,
+        themeColor: job.themeColor,
+      };
+    })
+    .sort((a, b) => {
+      const aProgress = a.total ? a.completed / a.total : 0;
+      const bProgress = b.total ? b.completed / b.total : 0;
+      return bProgress - aProgress || b.completed - a.completed || a.name.localeCompare(b.name, "ko");
+    })
+    .slice(0, 4);
   const nextSkills = targetSkills.filter(
     (skill) =>
       !unlockedSkillKeys.has(skill.skillKey) &&
@@ -55,7 +77,7 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <>
+    <div className="dashboard-shell">
       <header className="dashboard-hero">
         <div><p className="eyebrow">MY ADVENTURE</p><h1>{user.nickname}님의 성장 기록</h1></div>
         <p>스킬을 해금하고 나만의 커리어를 성장시켜보세요.</p>
@@ -80,8 +102,10 @@ export default async function DashboardPage() {
           age={user.age}
           nextSkills={nextSkills.map((skill) => ({ name: skill.name, xp: skill.xp }))}
           recentSkills={recentSkills}
+          otherCareerPaths={targetCompleted === targetSkillKeys.size ? otherCareerPaths : []}
         />
       </div>
-    </>
+      <DeleteAccountButton />
+    </div>
   );
 }

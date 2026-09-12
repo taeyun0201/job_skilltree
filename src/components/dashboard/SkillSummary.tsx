@@ -5,6 +5,7 @@ interface SkillSummaryProps {
   targetCompleted: number; targetTotal: number; major: string; interest: string; age?: number;
   nextSkills: { name: string; xp: number }[];
   recentSkills: { name: string; unlockedAt: Date }[];
+  otherCareerPaths: { id: string; name: string; completed: number; total: number; themeColor: string }[];
 }
 
 export function SkillSummary(props: SkillSummaryProps) {
@@ -24,6 +25,34 @@ export function SkillSummary(props: SkillSummaryProps) {
         <div className="progress career-progress"><span style={{ width: `${targetProgress}%` }} /></div>
         <Link className="button primary dashboard-map-link" href="/skill-map">스킬트리로 이동 →</Link>
       </div>
+      {props.otherCareerPaths.length ? (
+        <section className="card career-paths-card">
+          <div className="dashboard-card-heading">
+            <div><p className="eyebrow">NEW CAREER QUEST</p><h2>새로운 직업에 도전하기</h2></div>
+            <span className="career-complete-badge">목표 달성 ✓</span>
+          </div>
+          <p>완료한 스킬은 다른 직업에서도 그대로 인정돼요.</p>
+          <div className="career-path-grid">
+            {props.otherCareerPaths.map((job) => {
+              const progress = job.total ? Math.round((job.completed / job.total) * 100) : 0;
+              return (
+                <Link
+                  className="career-path-option"
+                  href={`/skill-map?job=${job.id}`}
+                  key={job.id}
+                  style={{ "--career-color": job.themeColor } as React.CSSProperties}
+                >
+                  <span className="career-path-icon">⚔</span>
+                  <strong>{job.name}</strong>
+                  <small>{job.completed} / {job.total} 스킬</small>
+                  <div><span style={{ width: `${progress}%` }} /></div>
+                  <b>{progress}%</b>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
       <div className="dashboard-list-grid">
         <section className="card dashboard-list-card"><p className="eyebrow">NEXT QUEST</p><h2>다음 추천 스킬</h2>
           {props.nextSkills.length ? <ul>{props.nextSkills.map((skill) => <li key={skill.name}><span>{skill.name}</span><strong>+{skill.xp} XP</strong></li>)}</ul> : <p>목표 직업의 모든 스킬을 완료했어요!</p>}

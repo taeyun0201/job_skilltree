@@ -1,4 +1,5 @@
 import { JOBS, SKILLS } from "@/data/skill-map";
+import { SKILL_COURSES } from "@/data/skill-courses";
 import type { Skill } from "@/types";
 
 const STATUS_LABEL = {
@@ -26,6 +27,7 @@ export function SkillDetail({ skill, onClose, onUnlock, isUnlocking, error }: Sk
       (item) => item.skillKey === skill.skillKey && item.jobIds.includes(job.id),
     ),
   ).map((job) => job.name);
+  const courses = SKILL_COURSES[skill.skillKey] ?? [];
 
   return (
     <aside className={"pixel-detail-panel " + skill.status}>
@@ -48,6 +50,29 @@ export function SkillDetail({ skill, onClose, onUnlock, isUnlocking, error }: Sk
         <div>
           <dt>필요 스킬</dt>
           <dd>{prerequisiteNames.length ? prerequisiteNames.join(" · ") : "없음"}</dd>
+        </div>
+        <div>
+          <dt>추천 강의</dt>
+          <dd>
+            {courses.length ? (
+              <span className="pixel-course-list">
+                {courses.map((course) => (
+                  <a
+                    className="pixel-course-link"
+                    href={course.url}
+                    key={course.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {course.title}
+                    <span aria-hidden="true"> ↗</span>
+                  </a>
+                ))}
+              </span>
+            ) : (
+              "없음"
+            )}
+          </dd>
         </div>
       </dl>
 

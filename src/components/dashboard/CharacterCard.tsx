@@ -21,7 +21,7 @@ export function CharacterCard({
   const characterImage = `/characters/${characterGender}-${characterVariant}-lv${stage}.png`;
 
   return (
-    <section className="card">
+    <section className="card character-card">
       <p className="eyebrow">LV. {level}</p>
       <div className="character-stage" aria-label={nickname + " 캐릭터"}>
         <Image
@@ -33,7 +33,7 @@ export function CharacterCard({
           priority
         />
       </div>
-      <h2 style={{ textAlign: "center" }}>{nickname}</h2>
+      <h2 className="character-name">{nickname}</h2>
       <p>{experience} / 100 XP</p>
       <div className="progress"><span style={{ width: experience + "%" }} /></div>
       <p className="muted">누적 경험치: {totalExperience} XP</p>

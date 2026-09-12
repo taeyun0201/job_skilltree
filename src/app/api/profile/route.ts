@@ -114,3 +114,48 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ profile });
 }
+
+export async function DELETE() {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+  }
+
+  const db = await getDb();
+  const transaction = db.client.startSession();
+  let deletedSkills = 0;
+
+  try {
+    await transaction.withTransaction(async () => {
+      const user = await db
+        .collection<UserDocument>("users")
+        .findOne({ _id: userId }, { session: transaction, projection: { _id: 1 } });
+
+      if (!user) {
+        throw new Error("USER_NOT_FOUND");
+      }
+
+      const skillsResult = await db.collection("user_skills").deleteMany(
+        { userId: userId.toHexString() },
+        { session: transaction },
+      );
+      deletedSkills = skillsResult.deletedCount;
+
+      await db.collection<UserDocument>("users").deleteOne(
+        { _id: userId },
+        { session: transaction },
+      );
+    });
+
+    return NextResponse.json({ deleted: true, deletedSkills });
+  } catch (error) {
+    if (error instanceof Error && error.message === "USER_NOT_FOUND") {
+      return NextResponse.json({ error: "사용자를 찾을 수 없습니다." }, { status: 404 });
+    }
+
+    console.error("계정 삭제 중 오류가 발생했습니다.", error);
+    return NextResponse.json({ error: "계정을 삭제하지 못했습니다." }, { status: 500 });
+  } finally {
+    await transaction.endSession();
+  }
+}

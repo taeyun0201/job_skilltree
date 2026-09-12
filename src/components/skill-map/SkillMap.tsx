@@ -11,6 +11,7 @@ import {
 import { JOBS, SKILLS } from "@/data/skill-map";
 import type { Skill, SkillStatus } from "@/types";
 import { SkillDetail } from "./SkillDetail";
+import { SkillRecommendationTree } from "./SkillRecommendationTree";
 
 const WORLD_WIDTH = 3800;
 const WORLD_HEIGHT = 2600;
@@ -91,6 +92,7 @@ export function SkillMap({ initialUnlockedSkillKeys, targetJobId }: SkillMapProp
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(targetJobId ?? null);
+  const [treeMode, setTreeMode] = useState<"career" | "discovery">("career");
   const [scale, setScale] = useState(0.27);
   const [offset, setOffset] = useState({ x: 18, y: 34 });
   const [isDragging, setIsDragging] = useState(false);
@@ -166,7 +168,8 @@ export function SkillMap({ initialUnlockedSkillKeys, targetJobId }: SkillMapProp
   }, [targetJobId]);
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if ((event.target as HTMLElement).closest("button")) return;
+    if (treeMode === "discovery") return;
+    if ((event.target as HTMLElement).closest("button, a, .pixel-detail-panel")) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     setAnimateMap(false);
     dragRef.current = {
@@ -196,6 +199,8 @@ export function SkillMap({ initialUnlockedSkillKeys, targetJobId }: SkillMapProp
   }
 
   function handleWheel(event: WheelEvent<HTMLDivElement>) {
+    if (treeMode === "discovery") return;
+    if ((event.target as HTMLElement).closest(".pixel-detail-panel")) return;
     event.preventDefault();
     setAnimateMap(false);
     const viewport = viewportRef.current;
@@ -237,7 +242,12 @@ export function SkillMap({ initialUnlockedSkillKeys, targetJobId }: SkillMapProp
         </div>
       </div>
 
-      <div className="pixel-job-tabs" aria-label="직업으로 이동">
+      <div className="skill-tree-mode-tabs" role="tablist" aria-label="스킬트리 종류">
+        <button className={treeMode === "career" ? "active" : ""} type="button" onClick={() => setTreeMode("career")}>직업 중심 스킬트리</button>
+        <button className={treeMode === "discovery" ? "active" : ""} type="button" onClick={() => { setTreeMode("discovery"); setSelectedId(null); }}>기술 중심 · 직업 추천</button>
+      </div>
+
+      <div className={"pixel-job-tabs" + (treeMode === "discovery" ? " hidden" : "")} aria-label="직업으로 이동">
         {JOBS.map((job) => (
           <button
             className={activeJobId === job.id ? "active" : undefined}
@@ -253,7 +263,7 @@ export function SkillMap({ initialUnlockedSkillKeys, targetJobId }: SkillMapProp
 
       <div
         ref={viewportRef}
-        className={"skill-map-viewport" + (isDragging ? " dragging" : "")}
+        className={"skill-map-viewport" + (isDragging ? " dragging" : "") + (treeMode === "discovery" ? " recommendation-mode" : "")}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={stopDragging}
@@ -263,6 +273,7 @@ export function SkillMap({ initialUnlockedSkillKeys, targetJobId }: SkillMapProp
         <div
           className={"skill-map-world" + (animateMap ? " animated" : "")}
           style={{
+            display: treeMode === "career" ? undefined : "none",
             width: WORLD_WIDTH,
             height: WORLD_HEIGHT,
             transform: "translate(" + offset.x + "px, " + offset.y + "px) scale(" + scale + ")",
@@ -357,19 +368,32 @@ export function SkillMap({ initialUnlockedSkillKeys, targetJobId }: SkillMapProp
           ))}
         </div>
 
-        <div className="map-controls">
-          <button type="button" onClick={() => changeZoom(0.1)} aria-label="확대">+</button>
-          <button type="button" onClick={() => changeZoom(-0.1)} aria-label="축소">−</button>
-          <button type="button" onClick={resetView} aria-label="전체 지도 보기">⌂</button>
-        </div>
+        {treeMode === "discovery" ? (
+          <SkillRecommendationTree
+            skills={displayedSkills}
+            onSelect={(skill) => {
+              setSelectedId(skill.id);
+              setUnlockError(null);
+            }}
+          />
+        ) : null}
 
-        <div className="pixel-legend">
-          <span><i className="completed" />해금 완료</span>
-          <span><i className="available" />학습 가능</span>
-          <span><i className="locked" />잠김</span>
-        </div>
+        {treeMode === "career" ? (
+          <>
+            <div className="map-controls">
+              <button type="button" onClick={() => changeZoom(0.1)} aria-label="확대">+</button>
+              <button type="button" onClick={() => changeZoom(-0.1)} aria-label="축소">−</button>
+              <button type="button" onClick={resetView} aria-label="전체 지도 보기">⌂</button>
+            </div>
+            <div className="pixel-legend">
+              <span><i className="completed" />해금 완료</span>
+              <span><i className="available" />학습 가능</span>
+              <span><i className="locked" />잠김</span>
+            </div>
+          </>
+        ) : null}
 
-        <div className="map-help">드래그하여 이동 · 휠로 확대/축소</div>
+        {treeMode === "career" ? <div className="map-help">드래그하여 이동 · 휠로 확대/축소</div> : null}
         <SkillDetail
           skill={selected}
           onClose={() => setSelectedId(null)}

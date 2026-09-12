@@ -83,6 +83,42 @@ src/
 
 `src/types/index.ts`와 API 응답 형식은 네 명이 함께 합의한 뒤 변경합니다. 공통 파일을 수정해야 하면 먼저 팀 채널에 알려 충돌을 줄입니다.
 
+## 기능별 수정 파일
+
+아래 표에서 맡은 기능의 **주 수정 파일**을 먼저 작업합니다. 연동 파일은 해당 기능을 실제 데이터와 연결할 때 함께 수정합니다.
+
+| 기능 | 주 수정 파일 | 연동하거나 함께 확인할 파일 | 구현 내용 |
+| --- | --- | --- | --- |
+| 랜딩 페이지 | `src/app/page.tsx` | `src/app/globals.css`, `src/app/layout.tsx` | 서비스 소개와 로그인·회원가입 진입 버튼 |
+| 로그인 | `src/app/(auth)/login/page.tsx`, `src/components/auth/AuthForm.tsx` | `src/app/(main)/layout.tsx` | 실제 로그인 요청, 오류 표시, 로그인 후 이동 |
+| 회원가입 | `src/app/(auth)/signup/page.tsx`, `src/components/auth/AuthForm.tsx` | `src/app/onboarding/page.tsx` | 계정 생성과 최초 온보딩 이동 |
+| 인증 보호 | `src/app/(main)/layout.tsx` | 인증 담당자가 추가할 `src/lib/auth.ts` | 비로그인 사용자의 접근 차단과 로그인 화면 이동 |
+| 최초 온보딩 | `src/app/onboarding/page.tsx`, `src/components/onboarding/OnboardingForm.tsx` | `src/app/api/profile/route.ts`, `src/types/index.ts` | 닉네임·캐릭터·전공·나이·관심 분야·목표 직업 저장 |
+| 개인 대시보드 | `src/app/(main)/dashboard/page.tsx` | `src/app/api/profile/route.ts` | 로그인 사용자의 캐릭터와 성장 정보 조회 |
+| 캐릭터 표시 | `src/components/dashboard/CharacterCard.tsx` | `public/characters/`, `src/lib/progression.ts` | 레벨별 도트 이미지와 경험치 바 표시 |
+| 성장 요약 | `src/components/dashboard/SkillSummary.tsx` | `src/app/api/profile/route.ts`, `src/lib/progression.ts` | 목표 직업, 해금 수, 다음 추천 스킬 표시 |
+| 스킬맵 화면 | `src/app/(main)/skill-map/page.tsx`, `src/components/skill-map/SkillMap.tsx` | `src/data/skill-map.ts`, `src/app/api/skill-map/route.ts` | 지도 렌더링, 드래그·확대·축소, 노드 연결선 |
+| 스킬 노드 상태 | `src/components/skill-map/SkillMap.tsx` | `src/types/index.ts`, `src/app/api/skill-map/route.ts` | 잠김·학습 가능·완료 상태별 스타일과 클릭 처리 |
+| 스킬 상세·해금 | `src/components/skill-map/SkillDetail.tsx` | `src/app/api/skills/[skillId]/unlock/route.ts` | 설명·선수 조건·XP 표시와 해금 요청 |
+| 직업·스킬 콘텐츠 | `src/data/skill-map.ts` | `src/types/index.ts` | 직업, 스킬, 선수 관계, 공통 스킬 ID, 지도 좌표 |
+| 프로필 API | `src/app/api/profile/route.ts` | `src/lib/mongodb.ts`, `src/types/index.ts` | 프로필 조회, 온보딩 저장, 목표 직업 변경 |
+| 스킬맵 API | `src/app/api/skill-map/route.ts` | `src/data/skill-map.ts`, `src/lib/mongodb.ts` | 고정 지도 데이터와 사용자 해금 상태 결합 |
+| 스킬 해금 API | `src/app/api/skills/[skillId]/unlock/route.ts` | `src/lib/mongodb.ts`, `src/lib/progression.ts`, `src/data/skill-map.ts` | 선수 조건 검사, 중복 방지, 해금 저장, 성장 결과 반환 |
+| MongoDB 연결 | `src/lib/mongodb.ts` | `.env.local`, `.env.example` | Vercel 환경에서 재사용 가능한 DB 연결 |
+| 경험치·레벨 | `src/lib/progression.ts` | `src/components/dashboard/CharacterCard.tsx` | 총 XP, 현재 레벨, 현재 레벨 경험치 계산 |
+| 공통 타입 | `src/types/index.ts` | 이 타입을 import하는 모든 파일 | API와 컴포넌트가 공유하는 데이터 구조 |
+| 공통 레이아웃·스타일 | `src/app/layout.tsx`, `src/app/globals.css` | 전체 화면 | 헤더, 내비게이션, 색상과 공통 UI 스타일 |
+| Vercel 배포 | `package.json`, `next.config.ts`, `.env.example` | Vercel 프로젝트 설정 | 빌드 설정과 환경 변수 등록 |
+
+### 담당자별 바로 시작할 파일
+
+1. **인증·온보딩 담당:** `src/components/auth/AuthForm.tsx` → `src/components/onboarding/OnboardingForm.tsx` → `src/app/api/profile/route.ts`
+2. **대시보드·캐릭터 담당:** `src/app/(main)/dashboard/page.tsx` → `src/components/dashboard/CharacterCard.tsx` → `src/components/dashboard/SkillSummary.tsx`
+3. **스킬맵 담당:** `src/components/skill-map/SkillMap.tsx` → `src/components/skill-map/SkillDetail.tsx` → `src/data/skill-map.ts`
+4. **DB·API·배포 담당:** `src/lib/mongodb.ts` → `src/app/api/profile/route.ts` → `src/app/api/skills/[skillId]/unlock/route.ts`
+
+`src/types/index.ts`, `src/data/skill-map.ts`, `src/app/globals.css`, `package.json`은 여러 담당자가 사용할 가능성이 큰 공통 파일입니다. 수정 전에 담당자끼리 알려 같은 줄을 동시에 변경하지 않도록 합니다.
+
 ## Git 협업 규칙
 
 각자 `main`에서 작업 브랜치를 만들고 Pull Request로 병합합니다.

@@ -32,13 +32,8 @@ export function DeleteAccountButton() {
   }
 
   return (
-    <section className="account-danger-zone" aria-labelledby="account-danger-title">
-      <div>
-        <p className="eyebrow">ACCOUNT</p>
-        <h2 id="account-danger-title">계정 삭제</h2>
-        <p>캐릭터 정보와 지금까지 해금한 스킬을 모두 삭제합니다.</p>
-        {error ? <p className="account-delete-error" role="alert">{error}</p> : null}
-      </div>
+    <section className="account-danger-zone" aria-label="계정 관리">
+      {error ? <p className="account-delete-error" role="alert">{error}</p> : null}
       <button
         className="account-delete-button"
         type="button"

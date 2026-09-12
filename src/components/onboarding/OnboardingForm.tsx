@@ -74,6 +74,7 @@ export function OnboardingForm() {
       <label>
         목표 직업
         <select name="targetJobId">
+          <option value="undecided">미정</option>
           {JOBS.map((job) => <option key={job.id} value={job.id}>{job.name}</option>)}
         </select>
       </label>

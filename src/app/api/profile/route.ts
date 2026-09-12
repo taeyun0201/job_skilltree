@@ -74,7 +74,7 @@ export async function PATCH(request: Request) {
   if (age !== undefined && (!Number.isInteger(age) || age < 14 || age > 100)) {
     return NextResponse.json({ error: "나이는 14~100 사이의 정수로 입력해주세요." }, { status: 400 });
   }
-  if (!JOBS.some((job) => job.id === targetJobId)) {
+  if (targetJobId !== "undecided" && !JOBS.some((job) => job.id === targetJobId)) {
     return NextResponse.json({ error: "목표 직업을 선택해주세요." }, { status: 400 });
   }
 
@@ -98,13 +98,28 @@ export async function PATCH(request: Request) {
         nickname,
         characterGender,
         characterVariant,
-        ...(major ? { major } : {}),
-        ...(age !== undefined ? { age } : {}),
-        ...(interest ? { interest } : {}),
         targetJobId,
         onboardingCompleted: true,
         updatedAt: new Date(),
       },
+      $unset: {
+        ...(major ? {} : { major: "" }),
+        ...(age !== undefined ? {} : { age: "" }),
+        ...(interest ? {} : { interest: "" }),
+      },
+      ...(major || age !== undefined || interest ? {
+        $set: {
+          nickname,
+          characterGender,
+          characterVariant,
+          ...(major ? { major } : {}),
+          ...(age !== undefined ? { age } : {}),
+          ...(interest ? { interest } : {}),
+          targetJobId,
+          onboardingCompleted: true,
+          updatedAt: new Date(),
+        },
+      } : {}),
     },
   );
 
@@ -113,6 +128,27 @@ export async function PATCH(request: Request) {
   }
 
   return NextResponse.json({ profile });
+}
+
+export async function PUT(request: Request) {
+  const userId = await getAuthenticatedUserId();
+  if (!userId) return NextResponse.json({ error: "로그인이 필요합니다." }, { status: 401 });
+
+  const body = (await request.json().catch(() => null)) as { targetJobId?: unknown } | null;
+  const targetJobId = typeof body?.targetJobId === "string" ? body.targetJobId : "";
+  if (!JOBS.some((job) => job.id === targetJobId)) {
+    return NextResponse.json({ error: "올바른 목표 직업을 선택해주세요." }, { status: 400 });
+  }
+
+  const db = await getDb();
+  const result = await db.collection<UserDocument>("users").updateOne(
+    { _id: userId, targetJobId: "undecided" },
+    { $set: { targetJobId, updatedAt: new Date() } },
+  );
+  if (!result.matchedCount) {
+    return NextResponse.json({ error: "미정 상태에서만 목표 직업을 설정할 수 있습니다." }, { status: 409 });
+  }
+  return NextResponse.json({ targetJobId });
 }
 
 export async function DELETE() {

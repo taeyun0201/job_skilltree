@@ -219,6 +219,19 @@ input, select { width: 100%; padding: 12px; border: 1px solid var(--border); bor
   color: #aaf8eb;
   box-shadow: inset 0 0 0 2px #08171c, 3px 4px #070a10;
 }
+.profile-heading-actions { display: flex; align-items: center; gap: 10px; }
+.profile-edit-open { padding: 7px 10px; border: 3px solid #426b83; background: #172b39; color: #a8e7f8; font: 700 .65rem var(--font-pixel); cursor: pointer; box-shadow: inset 0 0 0 2px #0a151d, 3px 4px #070a10; }
+.profile-edit-open:hover { background: #214052; }
+.profile-edit-backdrop { position: fixed; z-index: 100; inset: 0; padding: 20px; display: grid; place-items: center; background: #05080dcc; }
+.profile-edit-modal { width: min(560px, 100%); max-height: calc(100vh - 40px); padding: 24px; overflow-y: auto; border: 4px solid #4baeba; background: #172132; box-shadow: inset 0 0 0 3px #09121a, 8px 9px #05070b; }
+.profile-edit-heading { display: flex; justify-content: space-between; gap: 20px; }
+.profile-edit-heading h2 { margin: 4px 0 0; color: #9af2e5; }
+.profile-edit-heading > button { width: 38px; height: 38px; border: 3px solid #53617a; background: #111927; color: #edf5ff; font-size: 1.35rem; cursor: pointer; }
+.profile-edit-modal form { margin-top: 21px; display: grid; gap: 14px; }
+.profile-edit-modal label { display: grid; gap: 7px; color: #81deda; font-size: .72rem; font-weight: 800; }
+.profile-edit-modal input, .profile-edit-modal select { border-radius: 0; background: #101725; }
+.profile-edit-actions { margin-top: 5px; display: flex; gap: 10px; }
+.profile-edit-error { margin: 0; color: #ff9eb5; font-size: .72rem; }
 
 .dashboard-shell .profile-grid div {
   border: 3px solid #34435e;
@@ -245,9 +258,12 @@ input, select { width: 100%; padding: 12px; border: 1px solid var(--border); bor
 
 .dashboard-shell .career-paths-card { border-color: #56b6b8; }
 .career-complete-badge { padding: 7px 10px; border: 3px solid #3c9f91; background: #15352f; color: #a5ffe7; font-size: .68rem; box-shadow: inset 0 0 0 2px #091a17, 3px 3px #070a10; }
+.career-order-badge { padding: 7px 10px; border: 3px solid #416c83; background: #172b39; color: #9cddf4; font-size: .68rem; box-shadow: inset 0 0 0 2px #0a151d, 3px 3px #070a10; }
 .career-paths-card > p { margin: 13px 0 18px; font-size: .72rem; }
 .career-path-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .career-path-option { --career-color: #73cfff; min-width: 0; padding: 14px; position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 7px 10px; border: 3px solid #3b4962; background: #111927; box-shadow: inset 0 0 0 2px #202c40, 4px 4px #070a10; }
+.career-path-option.selectable { color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.career-path-option.selectable:disabled { cursor: wait; opacity: .7; }
 .career-path-option:hover { border-color: var(--career-color); transform: translateY(-2px); box-shadow: inset 0 0 0 2px #202c40, 0 0 14px color-mix(in srgb, var(--career-color) 45%, transparent), 4px 6px #070a10; }
 .career-path-icon { color: var(--career-color); font-size: 1.15rem; }
 .career-path-option strong { overflow: hidden; color: #edf3ff; font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
@@ -255,6 +271,8 @@ input, select { width: 100%; padding: 12px; border: 1px solid var(--border); bor
 .career-path-option > div { height: 9px; grid-column: 1 / 3; border: 2px solid #080c13; background: #283247; box-shadow: inset 0 0 0 1px #5e6c83; }
 .career-path-option > div span { display: block; height: 100%; background: var(--career-color); }
 .career-path-option b { grid-column: 3; grid-row: 2 / 4; color: var(--career-color); font-size: .9rem; }
+.career-path-action { padding-top: 7px; grid-column: 1 / 4; border-top: 1px solid #344259; color: var(--career-color); font-size: .62rem; font-weight: 900; text-align: center; }
+.career-path-error { margin: 0 0 12px; color: #ff9eb5; font-size: .7rem; }
 
 .dashboard-shell .dashboard-list-card { min-height: 250px; }
 .dashboard-shell .dashboard-list-card:first-child { border-color: #559fc5; }
@@ -271,29 +289,29 @@ input, select { width: 100%; padding: 12px; border: 1px solid var(--border); bor
 .dashboard-shell .dashboard-list-card time { color: #7fe9e7; }
 
 .account-danger-zone {
-  margin: 26px 0 0;
-  padding: 20px 24px;
+  margin: 10px 0 0;
+  padding: 0;
+  min-height: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  border: 3px solid #583d4a;
-  background: #171722;
-  box-shadow: 7px 7px #080a10;
+  justify-content: flex-end;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
   font-family: var(--font-pixel);
 }
-.account-danger-zone .eyebrow { margin: 0 0 4px; color: #cc8297; font-size: .68rem; }
-.account-danger-zone h2 { margin: 0; color: #f0cad5; font-size: 1rem; }
-.account-danger-zone p:not(.eyebrow) { margin: 7px 0 0; color: #929aad; font-size: .7rem; }
 .account-delete-button {
   flex: 0 0 auto;
-  padding: 12px 18px;
-  border: 3px solid #9f5069;
+  padding: 7px 11px;
+  border: 2px solid #9f5069;
   background: #402432;
   color: #ffdce5;
   font: inherit;
+  font-size: .68rem;
+  line-height: 1;
   cursor: pointer;
-  box-shadow: inset -3px -3px #1b1017, inset 2px 2px #c77a91, 4px 4px #07090e;
+  box-shadow: inset -2px -2px #1b1017, inset 1px 1px #c77a91, 3px 3px #07090e;
 }
 .account-delete-button:hover:not(:disabled) { background: #573044; }
 .account-delete-button:disabled { cursor: wait; opacity: .65; }
@@ -306,8 +324,8 @@ input, select { width: 100%; padding: 12px; border: 1px solid var(--border); bor
   .dashboard-layout > .card { position: static; }
   .dashboard-list-grid { grid-template-columns: 1fr; }
   .career-path-grid { grid-template-columns: 1fr; }
-  .account-danger-zone { align-items: stretch; flex-direction: column; }
-  .account-delete-button { width: 100%; }
+  .account-danger-zone { align-items: center; flex-direction: row; }
+  .account-delete-button { width: auto; }
 }
 
 /* Pixel RPG job board */
@@ -999,3 +1017,7 @@ input, select { width: 100%; padding: 12px; border: 1px solid var(--border); bor
   .pixel-legend { max-width: calc(100% - 30px); flex-wrap: wrap; }
   .map-help { display: none; }
 }
+
+
+
+

@@ -38,11 +38,12 @@ export default async function DashboardPage() {
   );
   const progress = calculateProgress(totalXp);
   const targetJob = JOBS.find(({ id }) => id === user.targetJobId);
+  const hasTargetJob = Boolean(targetJob);
   const targetSkills = SKILLS.filter((skill) => skill.jobIds.includes(user.targetJobId ?? ""));
   const targetSkillKeys = new Set(targetSkills.map((skill) => skill.skillKey));
   const targetCompleted = [...targetSkillKeys].filter((key) => unlockedSkillKeys.has(key)).length;
   const otherCareerPaths = JOBS
-    .filter((job) => job.id !== user.targetJobId)
+    .filter((job) => !hasTargetJob || job.id !== user.targetJobId)
     .map((job) => {
       const skillKeys = new Set(
         SKILLS.filter((skill) => skill.jobIds.includes(job.id)).map((skill) => skill.skillKey),
@@ -61,7 +62,7 @@ export default async function DashboardPage() {
       const bProgress = b.total ? b.completed / b.total : 0;
       return bProgress - aProgress || b.completed - a.completed || a.name.localeCompare(b.name, "ko");
     })
-    .slice(0, 4);
+    .slice(0, hasTargetJob ? 4 : 5);
   const nextSkills = targetSkills.filter(
     (skill) =>
       !unlockedSkillKeys.has(skill.skillKey) &&
@@ -97,12 +98,17 @@ export default async function DashboardPage() {
           targetJob={targetJob?.name ?? "미정"}
           targetCompleted={targetCompleted}
           targetTotal={targetSkillKeys.size}
+          hasTargetJob={hasTargetJob}
+          nickname={user.nickname ?? "모험가"}
+          characterGender={user.characterGender ?? "male"}
+          characterVariant={user.characterVariant ?? 1}
+          targetJobId={user.targetJobId ?? "undecided"}
           major={user.major ?? ""}
           interest={user.interest ?? ""}
           age={user.age}
           nextSkills={nextSkills.map((skill) => ({ name: skill.name, xp: skill.xp }))}
           recentSkills={recentSkills}
-          otherCareerPaths={targetCompleted === targetSkillKeys.size ? otherCareerPaths : []}
+          otherCareerPaths={otherCareerPaths}
         />
       </div>
       <DeleteAccountButton />

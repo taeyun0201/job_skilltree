@@ -5,7 +5,7 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Career Skill Tree",
+  title: "Career++",
   description: "직업 역량을 게임처럼 성장시키는 커리어 스킬트리",
 };
 
